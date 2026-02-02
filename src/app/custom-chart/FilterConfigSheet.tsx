@@ -24,13 +24,13 @@ export interface FilterConfig {
 interface FilterConfigSheetProps {
   filterConfigs: FilterConfig[]
   onSave: (configs: FilterConfig[]) => void
-  triggerButton?: React.ReactNode
+  showActions?: boolean
 }
 
 export function FilterConfigSheet({
   filterConfigs,
   onSave,
-  triggerButton,
+  showActions = false,
 }: FilterConfigSheetProps) {
   const [open, setOpen] = useState(false)
   const formRef = useRef<SectionedFormContextType>(null)
@@ -125,9 +125,7 @@ export function FilterConfigSheet({
 
   return (
     <>
-      {triggerButton ? (
-        <div onClick={() => setOpen(true)}>{triggerButton}</div>
-      ) : (
+      {showActions && (
         <Button
           variant="outline"
           size="sm"

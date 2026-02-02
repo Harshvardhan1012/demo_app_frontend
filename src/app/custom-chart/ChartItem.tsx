@@ -7,11 +7,13 @@ export function ChartItem({
   onDelete,
   onEdit,
   index,
+  showActions = false,
 }: {
   chart: ChartConfiguration
   onDelete: (key: string) => void
   onEdit: (chart: ChartConfiguration) => void
   index?: number
+  showActions?: boolean
 }) {
   return (
     <div className="relative">
@@ -31,6 +33,7 @@ export function ChartItem({
         zoom={{
           enabled: true,
         }}
+        showActions={showActions}
         onAction={(action) => {
           if (action === 'edit') {
             onEdit(chart)

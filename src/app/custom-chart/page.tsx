@@ -19,7 +19,7 @@ import {
 } from '@tanstack/react-table'
 import { GripVertical, Plus, X } from 'lucide-react'
 import { useQueryState } from 'nuqs'
-import { useEffect, useMemo, useState } from 'react'
+import { useContext, useEffect, useMemo, useState } from 'react'
 import { CardBuilder } from '../custom-table/card-builder'
 import {
   bulkUpdateCards,
@@ -28,48 +28,60 @@ import {
   deleteCard,
   deleteChartConfig,
   editCard,
-  getAllCards,
-  getAllCharts,
-  getAllFilters,
+  getAppConfig,
   postCard,
 } from './api'
 import type { ChartConfiguration } from './ChartBuilder'
-import { width } from './utils'
 import { ChartBuilderSheet } from './ChartBuilderSheet'
 import { ChartItem } from './ChartItem'
 import { FilterConfigSheet, type FilterConfig } from './FilterConfigSheet'
+import { width } from './utils'
 const THROTTLE_MS = 50
 
+import { AuthContext } from '@/context/AuthContext'
+import { useParams } from 'react-router-dom'
+
 export default function ChartPage() {
-  const [editingChart, setEditingChart] = useState<ChartConfiguration | null>(
-    null
-  )
+  const { appKey } = useParams()
+  const { user } = useContext(AuthContext)
   const [params, setParams] = useState<Object>({})
+  const { data: getApplication } = getAppConfig(appKey || '', params)
+  const applicationId = getApplication?.data?.id
+
+  const [editingChart, setEditingChart] = useState<ChartConfiguration | null>(
+    null,
+  )
   const [open, setOpen] = useState(false)
-  const { data: charts } = getAllCharts(params)
-  const { data: cards } = getAllCards()
-  const { data: filtersData } = getAllFilters()
+  // const { data: charts } = getAllCharts(params)
+  // const { data: cards } = getAllCards()
+  // const { data: filtersData } = getAllFilters()
   const { mutate: bulkUpdateFiltersMutation } = bulkUpdateFilters()
   const { mutate: bulkUpdateCardsMutation } = bulkUpdateCards()
   const { mutate: createCardMutation } = postCard()
   const { mutate: editCardMutation } = editCard()
   const { mutate: deleteCardMutation } = deleteCard()
 
+  // Helper to add applicationId to all mutation payloads
+  function withAppId(payload: any) {
+    return { ...payload, applicationId }
+  }
+
   // Use filterConfigs from API data
-  const filterConfigs = filtersData?.data || []
+  const filterConfigs = getApplication?.data.filters || []
+
   const handleDeleteCard = (id: number) => {
     if (!id) return
     const confirmed = confirm('Are you sure you want to delete this card?')
     if (!confirmed) return
-    deleteCardMutation({ cardId: id })
+    deleteCardMutation(withAppId({ cardId: id }))
   }
 
   const editCardHandler = (id: number, cardData: any) => {
-    editCardMutation({ id, ...cardData })
+    editCardMutation(withAppId({ id, ...cardData }))
   }
 
   const createCardHandler = (cardData: any) => {
-    createCardMutation(cardData)
+    createCardMutation(withAppId(cardData))
   }
 
   const handleCardsReorder = (newCards: any[]) => {
@@ -77,7 +89,7 @@ export default function ChartPage() {
       ...card,
       order: idx,
     }))
-    bulkUpdateCardsMutation({ data: reindexed })
+    bulkUpdateCardsMutation(withAppId({ data: reindexed }))
   }
 
   const { mutate: bulkUpdateMutation } = bulkUpdateCharts()
@@ -86,7 +98,7 @@ export default function ChartPage() {
     if (!chartKey) return
     const confirmed = confirm('Are you sure you want to delete this chart?')
     if (!confirmed) return
-    deleteChartMutation({ chartKey })
+    deleteChartMutation(withAppId({ chartKey }))
   }
 
   const handleEditChart = (chart: ChartConfiguration) => {
@@ -99,37 +111,48 @@ export default function ChartPage() {
       ...chart,
       index: idx,
     }))
-    bulkUpdateMutation({ data: reindexed })
+    bulkUpdateMutation(withAppId({ data: reindexed }))
   }
 
   // Save filter configs using API
   const handleSaveFilterConfigs = (configs: FilterConfig[]) => {
-    bulkUpdateFiltersMutation({ data: configs })
+    bulkUpdateFiltersMutation(withAppId({ data: configs }))
   }
 
   // Create column definitions for filtering based on enabled configs
   const columns = useMemo<ColumnDef<any>[]>(() => {
     if (filterConfigs.length === 0) return []
 
-    return filterConfigs.map((config) => {
-      return {
-        accessorKey: config.columnKey,
-        header: config.columnKey,
-        enableColumnFilter: true,
-        meta: {
-          variant: config.variant,
-          options: config.options ?? [],
-          placeholder: config.placeholder,
-          spName: config.spName,
-        },
-      }
-    })
+    return filterConfigs.map(
+      (config: {
+        columnKey: any
+        variant: any
+        options: any
+        placeholder: any
+        spName: any
+      }) => {
+        return {
+          accessorKey: config.columnKey,
+          header: config.columnKey,
+          enableColumnFilter: true,
+          meta: {
+            variant: config.variant,
+            options: config.options ?? [],
+            placeholder: config.placeholder,
+            spName: config.spName,
+          },
+        }
+      },
+    )
   }, [filterConfigs])
 
   // Use URL query params for filters
   const enabledFilterKeys = useMemo(
-    () => filterConfigs.filter((c) => c.enabled).map((c) => c.columnKey),
-    [filterConfigs]
+    () =>
+      filterConfigs
+        .filter((c: { enabled: any }) => c.enabled)
+        .map((c: { columnKey: any }) => c.columnKey),
+    [filterConfigs],
   )
 
   const [urlFilters, setUrlFilters] = useQueryState(
@@ -138,7 +161,7 @@ export default function ChartPage() {
       clearOnDefault: true,
       shallow: false,
       throttleMs: THROTTLE_MS,
-    })
+    }),
   )
 
   // Convert URL filters to object format for API params
@@ -168,40 +191,45 @@ export default function ChartPage() {
     setUrlFilters([])
   }
 
+  console.log(user)
+
   return (
     <div className="p-3">
       <div className="flex items-center justify-between">
         <TitleDescription
-          title="Custom Charts"
-          description="Create and manage custom charts based on your data."
+          title={getApplication?.data.name}
+          description={`${getApplication?.data.description}`}
           size="lg"
         />
 
-        <div className="flex items-center gap-2">
-          <ChartBuilderSheet
-            data={[]}
-            columns={[]}
-            onSave={() => {
-              console.log('Chart created')
-              setEditingChart(null)
-            }}
-            triggerButton={
-              <Button variant="default">
-                <Plus className="w-4 h-4 mr-2" />
-                Create Chart
-              </Button>
-            }
-          />
-        </div>
+        {user?.createApplication && (
+          <div className="flex items-center gap-2">
+            <ChartBuilderSheet
+              data={[]}
+              columns={[]}
+              applicationId={applicationId}
+              onSave={() => {
+                console.log('Chart created')
+                setEditingChart(null)
+              }}
+              triggerButton={
+                <Button variant="default">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Chart
+                </Button>
+              }
+            />
+          </div>
+        )}
       </div>
       <CardBuilder
-        cards={cards?.data || []}
+        cards={getApplication?.data.cards || []}
         onAddCard={createCardHandler}
         onUpdateCard={editCardHandler}
         onReorderCards={handleCardsReorder}
         onDeleteCard={handleDeleteCard}
         data={[]}
-        showActions
+        showActions={user?.createApplication}
         sp
       />
 
@@ -220,6 +248,7 @@ export default function ChartPage() {
             <FilterConfigSheet
               filterConfigs={filterConfigs}
               onSave={handleSaveFilterConfigs}
+              showActions={user?.createApplication}
             />
           </div>
           {columns.length === 0 ? (
@@ -259,72 +288,80 @@ export default function ChartPage() {
         </div>
       }
 
-      {charts?.data?.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-96 space-y-4 border-2 border-dashed rounded-lg">
-          <h2 className="text-2xl font-semibold text-muted-foreground">
-            No Charts Available
-          </h2>
-          <p className="text-muted-foreground">
-            Create your first chart to get started
-          </p>
-          <ChartBuilderSheet
-            data={[]}
-            columns={[]}
-            onSave={() => {
-              console.log('Chart created')
-              setEditingChart(null)
-            }}
-            triggerButton={
-              <Button
-                variant="default"
-                size="lg">
-                <Plus className="w-5 h-5 mr-2" />
-                Create Your First Chart
-              </Button>
-            }
-          />
-        </div>
+      {getApplication?.data?.charts?.length === 0 ? (
+        user?.createApplication ? (
+          <div className="flex flex-col items-center justify-center h-96 space-y-4 border-2 border-dashed rounded-lg">
+            <h2 className="text-2xl font-semibold text-muted-foreground">
+              No Charts Available
+            </h2>
+            <p className="text-muted-foreground">
+              Create your first chart to get started
+            </p>
+            <ChartBuilderSheet
+              data={[]}
+              columns={[]}
+              applicationId={applicationId}
+              onSave={() => {
+                console.log('Chart created')
+                setEditingChart(null)
+              }}
+              triggerButton={
+                <Button
+                  variant="default"
+                  size="lg">
+                  <Plus className="w-5 h-5 mr-2" />
+                  Create Your First Chart
+                </Button>
+              }
+            />
+          </div>
+        ) : null
       ) : (
         <div>
           <Sortable
-            value={charts?.data || []}
+            value={getApplication?.data?.charts || []}
             onValueChange={handleChartsReorder}
             getItemValue={(chart) => chart.chartKey}
             orientation="mixed">
             <SortableContent className="grid grid-cols-1 lg:grid-cols-6 gap-6">
-              {charts?.data?.map((chart, index) => (
-                <SortableItem
-                  key={chart.chartKey}
-                  value={chart.chartKey}
-                  className={`group relative ${width[chart.width].className}`}>
-                  <ChartItem
-                    chart={chart}
-                    onDelete={handleDeleteChart}
-                    onEdit={handleEditChart}
-                    index={index}
-                  />
-                  <div className="absolute top-14 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <SortableItemHandle
-                      asChild
-                      className="cursor-grab active:cursor-grabbing">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-8 w-8 p-0 hover:bg-muted/80">
-                        <GripVertical className="h-4 w-4" />
-                        <span className="sr-only">Drag to reorder</span>
-                      </Button>
-                    </SortableItemHandle>
-                  </div>
-                </SortableItem>
-              ))}
+              {getApplication?.data?.charts?.map(
+                (chart: any, index: number) => (
+                  <SortableItem
+                    key={chart.chartKey}
+                    value={chart.chartKey}
+                    className={`group relative ${width[chart.width].className}`}>
+                    <ChartItem
+                      chart={chart}
+                      onDelete={handleDeleteChart}
+                      onEdit={handleEditChart}
+                      index={index}
+                      showActions={user?.createApplication}
+                    />
+                    <div className="absolute top-14 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <SortableItemHandle
+                        asChild
+                        className="cursor-grab active:cursor-grabbing">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0 hover:bg-muted/80">
+                          <GripVertical className="h-4 w-4" />
+                          <span className="sr-only">Drag to reorder</span>
+                        </Button>
+                      </SortableItemHandle>
+                    </div>
+                  </SortableItem>
+                ),
+              )}
             </SortableContent>
 
             <SortableOverlay>
               {({ value }) => {
-                const chart = charts?.data?.find((c) => c.chartKey === value)
-                const chartIndex = charts?.data?.findIndex(
-                  (c) => c.chartKey === value
+                const chart = getApplication?.data?.charts?.find(
+                  (c: any) => c.chartKey === value,
+                )
+                const chartIndex = getApplication?.data?.charts?.findIndex(
+                  (c: any) => c.chartKey === value,
                 )
                 return chart ? (
                   <div className="opacity-50">
@@ -346,9 +383,11 @@ export default function ChartPage() {
         <ChartBuilderSheet
           data={editingChart.data || []}
           columns={Object.keys(
-            (editingChart.data && editingChart.data[0]) || {}
+            (editingChart.data && editingChart.data[0]) || {},
           )}
+          showActions={user?.createApplication}
           initialConfig={editingChart}
+          applicationId={applicationId}
           onSave={() => {
             setEditingChart(null)
             setOpen(false)

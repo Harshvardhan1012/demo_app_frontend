@@ -14,7 +14,7 @@ export const TitleDescription: React.FC<TitleDescriptionProps> = ({
   size = 'md',
 }) => {
   return (
-    <div className="px-6 py-4 border-b flex-shrink-0">
+    <div className="px-6 py-4 flex-shrink-0">
       <h2 className={`text-${size} font-semibold flex items-center`}>
         {icon && <span className="mr-2 flex items-center">{icon}</span>}
         {title}

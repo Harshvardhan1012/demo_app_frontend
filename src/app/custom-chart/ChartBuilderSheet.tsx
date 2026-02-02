@@ -26,11 +26,13 @@ import { ChartPreview } from './preview'
 interface ChartBuilderSheetProps {
   data: Record<string, any>[]
   columns: any[]
+  applicationId?: number
   onSave?: (chartConfig: ChartConfiguration) => void
   onCancel?: () => void
   triggerButton?: React.ReactNode
   initialConfig?: ChartConfiguration
   autoOpen?: boolean
+  showActions?: boolean
 }
 
 interface ChartPreviewContextType {
@@ -51,16 +53,18 @@ export function useChartPreview() {
 export function ChartBuilderSheet({
   data,
   columns,
+  applicationId,
   onSave,
   onCancel,
   triggerButton,
   initialConfig,
   autoOpen = false,
+  showActions = false,
 }: ChartBuilderSheetProps) {
   const isAutoOpenMode = triggerButton === null
   const [open, setOpen] = useState(isAutoOpenMode ? false : autoOpen)
   const [previewConfig, setPreviewConfig] = useState<ChartConfiguration | null>(
-    initialConfig || null
+    initialConfig || null,
   )
   const [leftWidth, setLeftWidth] = useState(40) // percentage
   const [isDragging, setIsDragging] = useState(false)
@@ -156,6 +160,7 @@ export function ChartBuilderSheet({
                         onSave={handleSave}
                         onCancel={handleCancel}
                         initialConfig={initialConfig}
+                        applicationId={applicationId}
                       />
                     </TableProvider>
                   </div>
@@ -183,7 +188,7 @@ export function ChartBuilderSheet({
                 </div>
 
                 <ScrollArea className="flex-1 h-full">
-                  <ChartPreview />
+                  <ChartPreview showActions={showActions} />
                 </ScrollArea>
               </div>
             </div>
@@ -202,6 +207,7 @@ function ChartBuilderWithPreview({
   onCancel,
   spName,
   initialConfig,
+  applicationId,
 }: {
   data: Record<string, any>[]
   columns: any[]
@@ -209,12 +215,15 @@ function ChartBuilderWithPreview({
   onCancel: () => void
   spName?: string
   initialConfig?: ChartConfiguration
+  applicationId: number
+  showActions: boolean
 }) {
   const { setPreviewConfig } = useChartPreview()
   const [open, setOpen] = useState(false)
   const [sp, setSP] = useState(spName || '')
+  const [executeSp, setExecuteSp] = useState(spName || '')
   // Use the callApi hook
-  const { data: apiResponse, error } = execSp(sp)
+  const { data: apiResponse, error } = execSp(executeSp, applicationId)
 
   // Determine which data to use - API data or initial data
   const activeData = apiResponse?.data || initialData
@@ -262,11 +271,11 @@ function ChartBuilderWithPreview({
             className="flex-1"
             placeholder="Enter SP Name"
           />
-          {/* <Button
-            disabled={!sp || isLoading}
-            onClick={() => setSpName(sp)}>
+          <Button
+            disabled={!sp}
+            onClick={() => setExecuteSp(sp)}>
             Execute SP
-          </Button> */}
+          </Button>
         </div>
         {error && (
           <p className="text-sm text-destructive">
@@ -311,6 +320,7 @@ function ChartBuilderWithPreview({
         onPreviewUpdate={handlePreviewUpdate}
         compact={true}
         initialConfig={initialConfig}
+        applicationId={applicationId}
       />
     </div>
   )

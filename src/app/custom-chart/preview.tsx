@@ -2,7 +2,7 @@ import { DynamicChart } from '@/components/chart/DynamicChart'
 import { BarChart3 } from 'lucide-react'
 import { useChartPreview } from './ChartBuilderSheet'
 
-export function ChartPreview() {
+export function ChartPreview({ showActions = false }: { showActions?: boolean }) {
   const { previewConfig } = useChartPreview()
 
   if (!previewConfig || !previewConfig.title || !previewConfig.xAxisKey) {
@@ -26,6 +26,7 @@ export function ChartPreview() {
       config={previewConfig.config}
       xAxisKey={previewConfig.xAxisKey}
       yAxisKeys={previewConfig.yAxisKeys}
+      showActions={showActions}
       zoom={{
         enabled: true,
       }}

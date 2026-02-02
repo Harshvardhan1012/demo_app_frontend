@@ -160,7 +160,7 @@ export interface DynamicChartProps {
   tooltipFormatter?: (
     value: unknown,
     name: string | number,
-    props: RechartsTooltipProps
+    props: RechartsTooltipProps,
   ) => React.ReactNode
   tooltipLabelFormatter?: (label: unknown, payload: unknown) => React.ReactNode
   legendPosition?: 'top' | 'bottom'
@@ -220,9 +220,10 @@ export interface DynamicChartProps {
     cellRenderer?: (
       value: string | number,
       key: string,
-      row: ChartDataPoint
+      row: ChartDataPoint,
     ) => React.ReactNode
   }
+  showActions?: boolean
   onAction?: (action: 'edit' | 'delete') => void
   sortable?: boolean
   onSortableChange?: (chartKey: string, position: number) => void
@@ -232,7 +233,7 @@ export interface DynamicChartProps {
 function getColorForKey(
   key: string,
   index: number,
-  config: ChartConfig
+  config: ChartConfig,
 ): string {
   const cssVar = `var(--color-${key})`
   // Check if the config has a themeable color defined
@@ -291,14 +292,14 @@ function prepareDownloadData(
   data: ChartDataPoint[],
   chartType: ChartType,
   yAxisKeys: string[],
-  config?: ChartConfig
+  config?: ChartConfig,
 ): ChartDataPoint[] {
   if ((chartType === 'pie' || chartType === 'donut') && yAxisKeys.length > 1) {
     return yAxisKeys.map((key) => {
       const total = data.reduce(
         (sum, item) =>
           sum + (typeof item[key] === 'number' ? (item[key] as number) : 0),
-        0
+        0,
       )
       return {
         name:
@@ -340,6 +341,7 @@ export function DynamicChart({
   tableConfig = {},
   onAction,
   chartIndex,
+  showActions = false,
 }: DynamicChartProps) {
   if (!data) {
     return <div>No data available</div>
@@ -363,7 +365,7 @@ export function DynamicChart({
         }
       }
       return chartType
-    }
+    },
   )
 
   const [sortConfig, setSortConfig] = React.useState<{
@@ -396,13 +398,13 @@ export function DynamicChart({
       data,
       currentChartType,
       validYAxisKeys,
-      chartConfig
+      chartConfig,
     )
     const csvContent = convertToCSV(downloadData)
     downloadFile(
       csvContent,
       `${downloadFilename}-${currentChartType}.csv`,
-      'text/csv'
+      'text/csv',
     )
   }
 
@@ -411,7 +413,7 @@ export function DynamicChart({
     setSortConfig((current) =>
       current && current.key === key && current.direction === 'asc'
         ? { key, direction: 'desc' }
-        : { key, direction: 'asc' }
+        : { key, direction: 'asc' },
     )
   }
 
@@ -425,7 +427,7 @@ export function DynamicChart({
       height: typeof height === 'number' ? height : 400,
       width: containerWidth > 0 ? containerWidth : 500,
     }),
-    [containerWidth, height]
+    [containerWidth, height],
   )
 
   const sortedData = React.useMemo(() => {
@@ -492,7 +494,7 @@ export function DynamicChart({
           dy={20}
           textAnchor="middle"
           className="fill-muted-foreground">{`(${(percent * 100).toFixed(
-          2
+          2,
         )}%)`}</text>
       </g>
     )
@@ -508,7 +510,7 @@ export function DynamicChart({
     if (!data.length)
       return <div className="py-8 text-center">No data available</div>
     const columns = Object.keys(data[0]).filter(
-      (key) => !hiddenColumns.includes(key)
+      (key) => !hiddenColumns.includes(key),
     )
     return (
       <div
@@ -650,7 +652,7 @@ export function DynamicChart({
               name: chartConfig?.[key]?.label || key,
               value: data.reduce(
                 (sum, item) => sum + (Number(item[key]) || 0),
-                0
+                0,
               ),
             }))
           : data
@@ -710,7 +712,7 @@ export function DynamicChart({
       className={cn(
         'gap-0 py-3 rounded-none bg-secondary',
         className,
-        classNames?.card
+        classNames?.card,
       )}>
       {loading ? (
         <>
@@ -730,7 +732,7 @@ export function DynamicChart({
             ref={containerRef}
             className={cn(
               'flex-1 p-3 w-full relative z-10',
-              classNames?.cardContent
+              classNames?.cardContent,
             )}>
             <div className="flex items-center justify-center h-full rounded-lg bg-muted/20">
               <Skeleton className="h-full w-full rounded-lg" />
@@ -747,7 +749,7 @@ export function DynamicChart({
                     <CardTitle
                       className={cn(
                         'text-lg font-semibold',
-                        classNames?.cardTitle
+                        classNames?.cardTitle,
                       )}>
                       {title}
                     </CardTitle>
@@ -756,7 +758,7 @@ export function DynamicChart({
                     <CardDescription
                       className={cn(
                         'text-sm mt-1',
-                        classNames?.cardDescription
+                        classNames?.cardDescription,
                       )}>
                       {description}
                     </CardDescription>
@@ -823,30 +825,32 @@ export function DynamicChart({
                     <Expand className="w-4 h-4" />
                   </Button>
                 </TooltipWrapper>
-                <DropdownMenu>
-                  <TooltipWrapper
-                    content="More actions"
-                    side="top">
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        title="Actions">
-                        <MoreVertical className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                  </TooltipWrapper>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => onAction?.('edit')}>
-                      <Edit className="w-4 h-4 mr-2" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onAction?.('delete')}>
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {showActions && (
+                  <DropdownMenu>
+                    <TooltipWrapper
+                      content="More actions"
+                      side="top">
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="Actions">
+                          <MoreVertical className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                    </TooltipWrapper>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => onAction?.('edit')}>
+                        <Edit className="w-4 h-4 mr-2" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onAction?.('delete')}>
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </div>
             </div>
           </CardHeader>
@@ -855,7 +859,7 @@ export function DynamicChart({
             ref={containerRef}
             className={cn(
               'flex-1 p-1 w-full bg-gradient-to-b from-transparent to-muted/5',
-              classNames?.cardContent
+              classNames?.cardContent,
             )}>
             {currentChartType === 'table' ? (
               renderTable()
@@ -884,7 +888,7 @@ export function DynamicChart({
             <CardFooter
               className={cn(
                 'flex justify-between text-xs text-muted-foreground',
-                classNames?.cardFooter
+                classNames?.cardFooter,
               )}>
               {footer}
             </CardFooter>

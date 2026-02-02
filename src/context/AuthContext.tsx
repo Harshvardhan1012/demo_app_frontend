@@ -1,5 +1,5 @@
+import API from '@/api/apiClient'
 import { AppRoutes } from '@/routes/routeUtils'
-import axios from 'axios'
 import React, {
   createContext,
   useEffect,
@@ -9,9 +9,8 @@ import React, {
 import { useNavigate } from 'react-router-dom'
 interface User {
   id: string
-  name: string
-  email: string
-  roles: string[]
+  username: string
+  createApplication: boolean
 }
 
 interface AuthContextType {
@@ -46,6 +45,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         if (token) {
           // Verify token and get user data
           const userData = await verifyToken(token)
+          console.log('Authenticated user:', userData)
           setUser(userData)
         }
       } catch (error) {
@@ -62,13 +62,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const login = async (credentials: any) => {
     try {
       // Your login API call
-      const response = await axios.post(
-        process.env.SSO_URL as string,
-        credentials
-      )
+      const response = await API.post('/auth/login', credentials)
 
       if (response.status === 200) {
         localStorage.setItem('authToken', response.data.token)
+        console.log('Login successful:', response.data.user)
         setUser(response.data.user)
       } else {
         throw new Error(response.data.message)
@@ -86,15 +84,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
   const verifyToken = async (token: string): Promise<User> => {
     // Your token verification logic
-    const response = await fetch('/api/verify', {
-      headers: { Authorization: `Bearer ${token}` },
+    const response = await API.get<any>('/api/verify', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     })
 
-    if (!response.ok) {
+    if (!response) {
       throw new Error('Token verification failed')
     }
 
-    return response.json()
+    return response.data.user
   }
 
   return (

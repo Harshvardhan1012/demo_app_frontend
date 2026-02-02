@@ -89,15 +89,17 @@ export function CardBuilder({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-end">
-        <Button
-          size="sm"
-          onClick={() => {
-            setEditingCard(undefined)
-            setShowForm(true)
-          }}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Card
-        </Button>
+        {showActions && (
+          <Button
+            size="sm"
+            onClick={() => {
+              setEditingCard(undefined)
+              setShowForm(true)
+            }}>
+            <Plus className="w-4 h-4 mr-2" />
+            Add Card
+          </Button>
+        )}
       </div>
 
       <CardGrid
