@@ -7,26 +7,35 @@ import React, {
   type ReactNode,
 } from 'react'
 import { useNavigate } from 'react-router-dom'
+
 interface User {
-  id: string
-  username: string
-  createApplication: boolean
+  id: number
+  roleName: string
+  empNo: string
+  name: string
+  L1UserId: number
+  roleId: number
+  L1EmpNo: string
+  L1EmpName: string
+  iat: number
+  canEdit: boolean
+  GMSSiteId: number
 }
 
 interface AuthContextType {
   user: User | null
   isAuthenticated: boolean
   loading: boolean
-  login: (credentials: any) => Promise<void>
   logout: () => void
+  hasPermission: (role: number[]) => boolean
 }
 
 export const AuthContext = createContext<AuthContextType>({
   user: null,
   isAuthenticated: true,
   loading: false,
-  login: async () => {},
   logout: () => {},
+  hasPermission: () => false,
 })
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({
@@ -36,6 +45,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
+  const verifyToken = async (token: string): Promise<User> => {
+    // Your token verification logic
+    const response = await API.get('users/info', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    return response.data.user
+  }
   useEffect(() => {
     // Check if user is authenticated on app start
     const checkAuth = async () => {
@@ -45,7 +61,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         if (token) {
           // Verify token and get user data
           const userData = await verifyToken(token)
-          console.log('Authenticated user:', userData)
           setUser(userData)
         }
       } catch (error) {
@@ -59,43 +74,37 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     checkAuth()
   }, [])
 
-  const login = async (credentials: any) => {
-    try {
-      // Your login API call
-      const response = await API.post('/auth/login', credentials)
-
-      if (response.status === 200) {
-        localStorage.setItem('authToken', response.data.token)
-        console.log('Login successful:', response.data.user)
-        setUser(response.data.user)
-      } else {
-        throw new Error(response.data.message)
-      }
-    } catch (error) {
-      throw error
-    }
+  const hasPermission = (role: number[]): boolean => {
+    return role.includes(user?.roleId || -1)
   }
 
   const logout = () => {
+    // Clear all authentication data
     localStorage.removeItem('authToken')
-    navigate(AppRoutes.LOGIN)
+    localStorage.removeItem('user') // Clear any cached user data
+
+    // Clear user state
     setUser(null)
+
+    // window.location.href = `${window.location.origin}/IPAM_AJ${AppRoutes.LOGIN}`
+    // Navigate to login with replace to prevent going back
+    navigate(AppRoutes.LOGIN, { replace: true })
+
+    // Optional: reload page to clear all state
   }
 
-  const verifyToken = async (token: string): Promise<User> => {
-    // Your token verification logic
-    const response = await API.get<any>('/api/verify', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
+  // const verifyToken = async (token: string): Promise<User> => {
+  //   // Your token verification logic
+  //   const response = await fetch('IPAM_NJ/api/verify', {
+  //     headers: { Authorization: `Bearer ${token}` },
+  //   })
 
-    if (!response) {
-      throw new Error('Token verification failed')
-    }
+  //   if (!response.ok) {
+  //     throw new Error('Token verification failed')
+  //   }
 
-    return response.data.user
-  }
+  //   return response.json()
+  // }
 
   return (
     <AuthContext.Provider
@@ -103,8 +112,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         user,
         isAuthenticated: !!user,
         loading,
-        login,
         logout,
+        hasPermission,
       }}>
       {children}
     </AuthContext.Provider>

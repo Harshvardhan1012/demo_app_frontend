@@ -10,7 +10,7 @@ import {
 } from '@tanstack/react-table'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
-import { FileText, FileType, Settings2 } from 'lucide-react'
+import { AlertCircle, FileText, FileType, RefreshCw, Settings2 } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import { Button } from '../ui/button'
 import { Checkbox } from '../ui/checkbox'
@@ -27,7 +27,7 @@ import {
   TooltipTrigger,
 } from '../ui/tooltip'
 
-import { cn } from '@/components/lib/utils'
+import { cn } from '@/lib/utils'
 import {
   Table,
   TableBody,
@@ -53,6 +53,7 @@ interface DataTableProps<TData, TValue> {
   onRowSelectionChange?: OnChangeFn<RowSelectionState>
   rowId?: (originalRow: TData) => string
   classNameCell?: string
+  total?: number
   exportData?: TData[] // Full data for export
   fileName?: string // Base name for export files
   heading?: string // Optional heading for the table
@@ -62,6 +63,8 @@ interface DataTableProps<TData, TValue> {
   isFetchingNextPage?: boolean // For infinite query loading state
   onLoadMore?: () => void // Function to load more data for infinite queries
   havePagination?: boolean // Control pagination display
+  error?: string | null
+  onRetry?: () => void
 }
 
 export function DataTable<TData, TValue>({
@@ -71,6 +74,7 @@ export function DataTable<TData, TValue>({
   pageCount,
   pageIndex = 0,
   pageSize = 10,
+  total,
   onPageChange,
   onPageSizeChange,
   isLoading = false,
@@ -86,7 +90,9 @@ export function DataTable<TData, TValue>({
   hasNextPage,
   isFetchingNextPage,
   onLoadMore,
-  havePagination = true, // Default to true for backward compatibility
+  havePagination = true,
+  error,
+  onRetry,
 }: DataTableProps<TData, TValue>) {
   const [pagination, setPagination] = React.useState({
     pageIndex,
@@ -330,7 +336,28 @@ export function DataTable<TData, TValue>({
           </TableHeader>
         )}
         <TableBody>
-          {isLoading ? (
+          {error ? (
+            <TableRow>
+              <TableCell
+                colSpan={columnsWithSelection.length}
+                className="h-32 text-center">
+                <div className="flex flex-col items-center justify-center gap-2 text-destructive">
+                  <AlertCircle className="h-6 w-6" />
+                  <p className="text-sm font-medium">{error}</p>
+                  {onRetry && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={onRetry}
+                      className="mt-1 gap-1.5">
+                      <RefreshCw className="h-3.5 w-3.5" />
+                      Retry
+                    </Button>
+                  )}
+                </div>
+              </TableCell>
+            </TableRow>
+          ) : isLoading ? (
             Array.from({ length: pageSize }).map((_, idx) => (
               <TableRow
                 className="h-5"
@@ -363,7 +390,7 @@ export function DataTable<TData, TValue>({
             <TableRow>
               <TableCell
                 colSpan={columnsWithSelection.length}
-                className="h-24 text-center">
+                className="h-24 text-center text-muted-foreground text-sm">
                 {errorMessage}
               </TableCell>
             </TableRow>
@@ -371,12 +398,13 @@ export function DataTable<TData, TValue>({
         </TableBody>
       </Table>
       {havePagination &&
-        pageCount > page &&
+        pageCount > 1 &&
         table.getRowModel().rows?.length > 0 && (
           <DataTablePagination
             page={page}
             pageSize={pageSize}
             pageCount={pageCount}
+            total={total}
             onPageChange={(newPage) => {
               setPagination({
                 ...pagination,

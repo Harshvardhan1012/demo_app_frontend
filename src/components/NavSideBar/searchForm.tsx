@@ -2,8 +2,8 @@
 
 import { cn } from '@/lib/utils'
 import { Search } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Input } from '../ui/input'
 
 export interface SearchResult {
@@ -13,6 +13,7 @@ export interface SearchResult {
   path: string[]
   isSubItem?: boolean
   url?: string
+  icon?: React.ElementType
 }
 
 export interface SearchFormProps {
@@ -33,7 +34,7 @@ export function SearchForm({
 }: SearchFormProps) {
   const [showResults, setShowResults] = useState(false)
   const [searchValue, setSearchValue] = useState('')
-  const router = useRouter()
+  const router = useNavigate()
 
   useEffect(() => {
     if (isCentered) {
@@ -109,40 +110,44 @@ export function SearchForm({
           )}>
           {results.length > 0 ? (
             <div className="overflow-y-auto p-2 divide-y divide-border">
-              {results.map((result) => (
-                <button
-                  key={result.id}
-                  className={cn(
-                    'flex flex-col w-full items-start gap-1 px-3 py-2 text-sm',
-                    'hover:bg-accent hover:text-accent-foreground rounded-md transition-colors',
-                    'focus:outline-none focus:bg-accent focus:text-accent-foreground'
-                  )}
-                  onClick={() => {
-                    if (result.url) {
-                      router.push(result.url)
-                    }
-                    setShowResults(false)
-                    onCloseModal?.()
-                  }}>
-                  <div className="w-full space-y-1">
-                    <div className="font-medium truncate">{result.title}</div>
-                    {result.path.length > 0 && (
-                      <div className="text-xs text-muted-foreground truncate">
-                        {result.path.join(' > ')}
-                      </div>
+              {results.map((result) => {
+                const Icon = result.icon
+                return (
+                  <button
+                    key={result.id}
+                    className={cn(
+                      'flex w-full items-start gap-3 px-3 py-2 text-sm',
+                      'hover:bg-accent hover:text-accent-foreground rounded-md transition-colors',
+                      'focus:outline-none focus:bg-accent focus:text-accent-foreground'
                     )}
-                  </div>
-                </button>
-              ))}
-            </div>
-          ) : searchValue ? (
-            <div className="p-4 text-sm text-muted-foreground text-center">
-              No results found
+                    onClick={() => {
+                      if (result.url) {
+                        router(result.url)
+                      }
+                      setShowResults(false)
+                      onCloseModal?.()
+                    }}>
+                    {Icon && (
+                      <Icon className="h-5 w-5 mt-0.5 flex-shrink-0 text-muted-foreground" />
+                    )}
+                    <div className="flex-1 space-y-1 text-left">
+                      <div className="font-medium truncate">{result.title}</div>
+                      {result.path.length > 0 && (
+                        <div className="text-xs text-muted-foreground truncate">
+                          {result.path.join(' > ')}
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                )
+              })}
             </div>
           ) : (
-            <div className="p-4 text-sm text-muted-foreground text-center">
-              Type to search...
-            </div>
+            searchValue && (
+              <div className="p-4 text-sm text-muted-foreground text-center">
+                No results found
+              </div>
+            )
           )}
         </div>
       )}

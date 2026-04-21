@@ -18,6 +18,7 @@ interface PaginationProps {
   page: number
   pageSize: number
   pageCount: number
+  total?: number
   onPageChange: (page: number) => void
   onPageSizeChange: (size: number) => void
   isLoading?: boolean
@@ -30,6 +31,7 @@ export function DataTablePagination({
   page,
   pageSize,
   pageCount,
+  total,
   onPageChange,
   onPageSizeChange,
   isLoading,
@@ -37,9 +39,10 @@ export function DataTablePagination({
   isFetchingNextPage,
   onLoadMore,
 }: PaginationProps) {
+  const totalRows = total ?? pageCount * pageSize
   const startRow = pageSize * (page - 1) + 1
-  const endRow = Math.min(page * pageSize, pageCount * pageSize)
-  const totalRows = pageCount * pageSize
+  const endRow = Math.min(page * pageSize, totalRows)
+  const isLastPage = onLoadMore ? (!hasNextPage || !!isFetchingNextPage) : page >= pageCount
 
   return (
     <div className="flex flex-col md:flex-row md:items-center md:justify-between px-2 w-full gap-2">
@@ -103,7 +106,7 @@ export function DataTablePagination({
           variant="outline"
           className="h-8 w-8 p-0"
           onClick={() => onPageChange(page + 1)}
-          disabled={!hasNextPage || isFetchingNextPage || page === pageCount}>
+          disabled={isLastPage}>
           <span className="sr-only">Go to next page</span>
           <ChevronRight />
         </Button>
@@ -111,7 +114,7 @@ export function DataTablePagination({
           variant="outline"
           className="hidden h-8 w-8 p-0 lg:flex"
           onClick={() => onPageChange(pageCount)}
-          disabled={!hasNextPage || isFetchingNextPage || page === pageCount}>
+          disabled={isLastPage}>
           <span className="sr-only">Go to last page</span>
           <ChevronsRight />
         </Button>

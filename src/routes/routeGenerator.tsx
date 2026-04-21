@@ -1,7 +1,6 @@
 import { Suspense, type JSX } from 'react'
 import { Route } from 'react-router-dom'
 import { Loader } from 'lucide-react'
-import ProtectedRoute from './ProtectedRoute'
 import type {
   SidebarConfig,
   SidebarItem,
@@ -22,17 +21,9 @@ export const generateRoutesFromSidebar = (config: SidebarConfig) => {
             element={
               <Suspense
                 fallback={
-                  <div className="flex justify-center items-center h-screen w-full">
-                    <Loader className="w-6 h-6 animate-spin text-muted-foreground" />
-                  </div>
+                  <Loader className="h-6 w-full animate-spin text-muted-foreground flex justify-center items-center " />
                 }>
-                {item.isProtected ? (
-                  <ProtectedRoute showIf={item.showIf}>
-                    <RouteComponent />
-                  </ProtectedRoute>
-                ) : (
-                  <RouteComponent />
-                )}
+                <RouteComponent />
               </Suspense>
             }
           />
@@ -49,18 +40,17 @@ export const generateRoutesFromSidebar = (config: SidebarConfig) => {
 
   // Process all groups
   config.groups.forEach((group: { items: SidebarItem[] }) =>
-    processItems(group.items)
+    processItems(group.items),
   )
   if (config.header && Array.isArray(config.header)) {
     config.header.forEach((group: { items: SidebarItem[] }) =>
-      processItems(group.items)
+      processItems(group.items),
     )
   }
   if (config.footer && Array.isArray(config.footer)) {
     config.footer.forEach((group: { items: SidebarItem[] }) =>
-      processItems(group.items)
+      processItems(group.items),
     )
   }
-
   return allRoutes
 }

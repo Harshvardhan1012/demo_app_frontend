@@ -12,7 +12,7 @@ import React, { useEffect, useRef, useState } from 'react'
 interface SheetDemoProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  children: React.ReactNode
+  children: React.ReactNode | ((width: number) => React.ReactNode)
   size?: 'sm' | 'md' | 'xl' | '2xl' | '3xl' | string
   storageKey?: string // Optional key to uniquely identify this sheet's width
 }
@@ -156,7 +156,9 @@ export default function SheetDemo({
           className="absolute top-0 left-0 h-full w-1 cursor-ew-resize bg-transparent hover:bg-border/40 transition-colors z-20"
         />
 
-        <div className="px-5 py-2">{children}</div>
+        <div className="px-5 py-2">
+          {typeof children === 'function' ? children(width) : children}
+        </div>
 
         <VisuallyHidden>
           <SheetFooter>Panel Footer</SheetFooter>

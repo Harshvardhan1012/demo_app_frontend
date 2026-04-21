@@ -1,6 +1,10 @@
 'use client'
 
 import { cn } from '@/lib/utils'
+import { Search } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Button } from '../ui/button'
 import {
   CommandDialog,
   CommandEmpty,
@@ -9,11 +13,7 @@ import {
   CommandItem,
   CommandList,
 } from './../ui/command'
-import { Search } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
-import { useEffect, useState } from 'react'
-import { Button } from '../ui/button'
-  
+
 export interface SearchResult {
   id: string | number
   title: string
@@ -60,7 +60,12 @@ export function SearchWrapper({
 
   const openCenteredSearch = () => {
     setSearchValue('') // Clear search input
-    setLocalResults([]) // Clear results when opening modal
+    // If no results yet, trigger a search with empty string to get all items
+    if (searchResults.length === 0) {
+      onSearch?.('')
+    } else {
+      setLocalResults(searchResults)
+    }
     setIsCentered(true)
   }
 
@@ -121,21 +126,26 @@ export function SearchWrapper({
               <CommandGroup
                 key={groupName}
                 heading={groupName}>
-                {groupResults.map((result) => (
-                  <CommandItem
-                    key={result.id}
-                    onSelect={() => handleSelect(result)}
-                    className={result.isSubItem ? 'pl-6' : ''}>
-                    {result.title}
-                  </CommandItem>
-                ))}
+                {groupResults.map((result) => {
+                  const Icon = result.icon as React.ElementType
+                  return (
+                    <CommandItem
+                      key={result.id}
+                      onSelect={() => handleSelect(result)}
+                      className={cn(
+                        'flex items-center gap-2',
+                        result.isSubItem ? 'pl-6' : ''
+                      )}>
+                      {Icon && <Icon className="h-4 w-4" />}
+                      <span>{result.title}</span>
+                    </CommandItem>
+                  )
+                })}
               </CommandGroup>
             ))
           ) : searchValue ? (
             <CommandEmpty>No results found</CommandEmpty>
-          ) : (
-            <CommandEmpty>Type to search...</CommandEmpty>
-          )}
+          ) : null}
         </CommandList>
       </CommandDialog>
     </>

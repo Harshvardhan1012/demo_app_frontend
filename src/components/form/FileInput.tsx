@@ -1,12 +1,12 @@
-import React, { useState } from 'react'
 import { cn } from '@/lib/utils'
+import { FileTextIcon } from 'lucide-react'
+import React, { useState } from 'react'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import type { BaseComponentProps } from './type'
-import { FileTextIcon } from 'lucide-react'
 
-interface FileInputProps extends BaseComponentProps<File | null> {
-  value?: File | null
+interface FileInputProps extends BaseComponentProps<string | null> {
+  value?: string | null // base64 string
   accept?: string
   multiple?: boolean
   icon?: React.ElementType
@@ -27,18 +27,23 @@ export const FileInput: React.FC<FileInputProps> = ({
   ...props
 }) => {
   const [preview, setPreview] = useState<string>('')
+  const [fileName, setFileName] = useState<string>('')
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null
-    onChange?.(file)
-
-    // Handle preview
-    if (file && file.type.startsWith('image/')) {
+    if (file) {
       const reader = new FileReader()
-      reader.onloadend = () => setPreview(reader.result as string)
+
+      reader.onloadend = () => {
+        const result = reader.result as string
+        setPreview(file.type.startsWith('image/') ? result : '')
+        setFileName(file.name)
+        onChange?.(result)
+      }
       reader.readAsDataURL(file)
     } else {
       setPreview('')
+      onChange?.(null)
     }
   }
 
@@ -68,15 +73,10 @@ export const FileInput: React.FC<FileInputProps> = ({
           disabled={disabled}
           className="flex-1"
           onChange={handleFileChange}
-          onBlur={(e) => onBlur?.(e.target.files?.[0])}
+          onBlur={(e) => onBlur?.(e.target.files?.[0]?.name ?? null)}
           {...props}
         />
       </div>
-      {value && !multiple && (
-        <p className="text-sm text-muted-foreground">
-          Selected file: {value.name}
-        </p>
-      )}
       {description && (
         <p className="text-sm text-muted-foreground">{description}</p>
       )}

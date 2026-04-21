@@ -6,7 +6,6 @@ import axios, {
   type InternalAxiosRequestConfig,
 } from "axios"
 import { AuthTokenManager } from "./authTokenManager"
-import { type ApiError } from "@/types/response"
 
 // Types and Interfaces
 interface ApiCallOptions {
@@ -31,10 +30,7 @@ interface ApiCallOptions {
 }
 
 
-let baseUrl = window.location.origin
-if (baseUrl.includes("localhost")) {
-  baseUrl = "http://localhost:4000"
-}
+const baseUrl = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4000"
 
 const apiClient: AxiosInstance = axios.create({
   timeout: 10000, // 10 seconds timeout
@@ -160,7 +156,7 @@ async function apiCall<T = any>(
 
     if (axiosError.response) {
       // Server responded with error status
-      const apiError: ApiError = {
+      const apiError = {
         status: axiosError.response.status,
         statusText: axiosError.response.statusText,
         data: axiosError.response.data,
@@ -172,7 +168,7 @@ async function apiCall<T = any>(
       throw apiError
     } else if (axiosError.request) {
       // Request was made but no response received
-      const apiError: ApiError = {
+      const apiError = {
         message: "No response received from server",
         type: "network_error",
         originalError: axiosError,
@@ -180,7 +176,7 @@ async function apiCall<T = any>(
       throw apiError
     } else {
       // Something else happened
-      const apiError: ApiError = {
+      const apiError = {
         message: axiosError.message,
         type: "request_error",
         originalError: axiosError,
@@ -247,4 +243,4 @@ class API {
 }
 // Export everything
 export default API
-export { apiCall, AuthTokenManager, type ApiCallOptions, type ApiError }
+export { apiCall, AuthTokenManager, type ApiCallOptions }

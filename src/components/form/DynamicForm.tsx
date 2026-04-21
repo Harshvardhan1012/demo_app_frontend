@@ -112,6 +112,8 @@ export interface BaseFormFieldConfig<T extends FormFieldType = FormFieldType> {
   disabled?: boolean
   placeholder?: string
   className?: string
+  inputPrefix?: React.ReactNode
+  inputSuffix?: React.ReactNode
   // Event callbacks
   onChangeField?: (value: unknown) => void
   onBlurField?: (value?: unknown) => void
@@ -375,8 +377,10 @@ const DynamicForm = forwardRef<FormContextType, DynamicFormProps>(
         fieldName: name,
         options,
         className,
+        inputPrefix,
+        inputSuffix,
         ...props
-      } = fieldConfig
+      } = fieldConfig as FormFieldConfig & { inputPrefix?: React.ReactNode; inputSuffix?: React.ReactNode }
 
       // Handle visibility
       if (hidden || (showIf && !showIf(formValues))) return null
@@ -403,6 +407,8 @@ const DynamicForm = forwardRef<FormContextType, DynamicFormProps>(
                         value={field.value as string | number}
                         placeholder={inputProps.placeholder}
                         icon={inputProps.icon}
+                        prefix={inputPrefix}
+                        suffix={inputSuffix}
                         disabled={inputProps.disabled}
                         onChange={(value) => {
                           field.onChange(value)

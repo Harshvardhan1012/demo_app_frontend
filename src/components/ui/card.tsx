@@ -89,5 +89,4 @@ export {
   CardFooter,
   CardHeader,
   CardTitle,
-  cn
 }

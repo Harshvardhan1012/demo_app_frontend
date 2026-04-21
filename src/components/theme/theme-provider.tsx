@@ -6,7 +6,13 @@ import {
 } from 'next-themes'
 
 // Define the available color themes
-export const colorThemes = ['default', 'boldtech', 'amber', 'custom']
+export const colorThemes = [
+  'default',
+  'boldtech',
+  'amber',
+  'supabase',
+  'custom',
+]
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   return (

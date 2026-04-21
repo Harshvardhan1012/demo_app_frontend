@@ -5,6 +5,8 @@ import {
   QueryClient,
   QueryClientProvider,
 } from '@tanstack/react-query'
+import { useState } from 'react'
+
 export const QueryClientWrapper = ({
   children,
 }: {
@@ -12,7 +14,7 @@ export const QueryClientWrapper = ({
 }) => {
   const { handleError, handleSuccess } = useApiNotification()
 
-  const queryClient = new QueryClient({
+  const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {
         retry: (failureCount, error) => {
@@ -45,7 +47,7 @@ export const QueryClientWrapper = ({
         handleError(error)
       },
     }),
-  })
+  }))
 
   return (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>

@@ -6,8 +6,9 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // Helper function to format date
-export const formatDate = (dateString: string) => {
+export const formatDate = (dateString: string | null) => {
   try {
+    if (!dateString) return '-'
     return new Date(dateString).toLocaleString("en-US", {
       year: "numeric",
       month: "short",
@@ -28,7 +29,7 @@ let buttonClickHandler:
 let globalFormInstance: any = null // Store global form instance for reset functionality
 
 export function setButtonClickHandler(
-  handler: (id: string, isValid: boolean, values: any, form: any) => void
+  handler: (id: string, isValid: boolean, values: any, form: any) => void,
 ) {
   buttonClickHandler = handler
 }
@@ -41,7 +42,7 @@ export function invokeButtonClickHandler(
   id: string,
   isValid: boolean,
   values: any,
-  form: any
+  form: any,
 ) {
   if (buttonClickHandler) {
     buttonClickHandler(id, isValid, values, form)
@@ -55,7 +56,7 @@ let tableActionHandler:
   | null = null
 
 export function setTableActionHandler(
-  handler: (actionId: string, value: any, row: any) => void
+  handler: (actionId: string, value: any, row: any) => void,
 ) {
   tableActionHandler = handler
 }
@@ -63,7 +64,7 @@ export function setTableActionHandler(
 export function invokeTableActionHandler(
   actionId: string,
   value: any,
-  row: any
+  row: any,
 ) {
   if (tableActionHandler) {
     tableActionHandler(actionId, value, row?.original)
@@ -75,7 +76,7 @@ export function invokeTableActionHandler(
 let actionClickHandler: ((action: string, row: any) => void) | null = null
 
 export function setActionClickHandler(
-  handler: (actionId: string, row: any) => void
+  handler: (actionId: string, row: any) => void,
 ) {
   actionClickHandler = handler
 }
@@ -93,7 +94,7 @@ let checkedClickHandler:
   | null = null
 
 export function setCheckedClickHandler(
-  handler: (actionId: string, value: any, row: any) => void
+  handler: (actionId: string, value: any, row: any) => void,
 ) {
   checkedClickHandler = handler
 }
@@ -101,7 +102,7 @@ export function setCheckedClickHandler(
 export function invokeCheckedClickHandler(
   action: string,
   value: any,
-  row: any
+  row: any,
 ) {
   if (checkedClickHandler) {
     checkedClickHandler(action, value, row)
@@ -110,12 +111,24 @@ export function invokeCheckedClickHandler(
   }
 }
 
+let clearTableSelectionHandler: (() => void) | null = null
+
+export function setClearTableSelectionHandler(handler: () => void) {
+  clearTableSelectionHandler = handler
+}
+
+export function invokeClearTableSelection() {
+  if (clearTableSelectionHandler) {
+    clearTableSelectionHandler()
+  }
+}
+
 let formFieldOnChangeHandler:
   | ((field: string, value: any, form_value: any) => void)
   | null = null
 
 export function setFormFieldOnChangeHandler(
-  handler: (field: string, value: any, form_value: any) => void
+  handler: (field: string, value: any, form_value: any) => void,
 ) {
   formFieldOnChangeHandler = handler
 }
@@ -123,7 +136,7 @@ export function setFormFieldOnChangeHandler(
 export function invokeFormFieldOnChangeHandler(
   field: string,
   value: any,
-  form_value: any
+  form_value: any,
 ) {
   if (formFieldOnChangeHandler) {
     formFieldOnChangeHandler(field, value, form_value)
@@ -136,7 +149,7 @@ export function updateFormFieldConfig(
   formConfig: { sections: any[] },
   sectionId: any,
   fieldName: any,
-  updates: { config: any }
+  updates: { config: any },
 ) {
   const updatedConfig = {
     ...formConfig,
@@ -174,7 +187,7 @@ export function updateFormConfig(config: any, updates: any): any {
 export function updateFormSectionConfig(
   config: any,
   sectionId: string,
-  updates: any
+  updates: any,
 ): any {
   const updatedSections = config.sections.map((section: any) => {
     if (section.id === sectionId) {
@@ -200,7 +213,7 @@ export function updateFormSectionConfig(
  */
 export function autoMapRowToFormFields(
   row: any,
-  formConfig: any
+  formConfig: any,
 ): Record<string, any> {
   console.log("🔍 autoMapRowToFormFields called with:", { row, formConfig })
 
@@ -235,10 +248,10 @@ export function validateTableFormAlignment(sampleRow: any, formConfig: any) {
   })
 
   const missingInTable = Array.from(formFields).filter(
-    (field) => !tableFields.has(field)
+    (field) => !tableFields.has(field),
   )
   const extraInTable = Array.from(tableFields).filter(
-    (field) => !formFields.has(field)
+    (field) => !formFields.has(field),
   )
 
   const result = {
@@ -266,7 +279,7 @@ export function validateTableFormAlignment(sampleRow: any, formConfig: any) {
 export function setupMasterPageHandlersAuto(
   formConfig: any,
   setCurrentFormConfig: (updater: (prev: any) => any) => void,
-  onSubmit?: (values: any) => void
+  onSubmit?: (values: any) => void,
 ) {
   // Button click handler
   setButtonClickHandler((id, isValid, values, form) => {
@@ -386,13 +399,13 @@ export function setupMasterPageHandlersAuto(
                               values[field.name] || "-"
                             }</div>
                         </div>
-                    `
+                    `,
                             )
                             .join("")
                         : ""
                     }
                 </div>
-            `
+            `,
               )
               .join("")}
         </body>
@@ -453,7 +466,7 @@ export function setupMasterPageHandlersAuto(
 export function setupMasterPageHandlers(
   setCurrentFormConfig: (updater: (prev: any) => any) => void,
   fieldMapping: (row: any) => Record<string, any>,
-  onSubmit?: (values: any) => void
+  onSubmit?: (values: any) => void,
 ) {
   // Button click handler
   setButtonClickHandler((id, isValid, values, form) => {

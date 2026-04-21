@@ -25,8 +25,10 @@ import { useEffect, useState } from 'react'
 // Color theme options
 const colorThemes = [
   { name: 'Default', value: 'default', color: 'bg-black' },
+  // { name: ''}
   { name: 'Bold Tech', value: 'boldtech', color: 'bg-purple-600' },
   { name: 'Amber Minimal', value: 'amber', color: 'bg-violet-600' },
+  { name: 'Supabase', value: 'supabase', color: 'bg-emerald-500' },
   {
     name: 'Custom',
     value: 'custom',
@@ -67,6 +69,20 @@ export function ThemeSelector() {
     ? theme.split('-')[1]
     : 'default'
 
+  // Get current mode (light/dark)
+  const getCurrentMode = () => {
+    if (theme === 'dark' || theme === 'light') {
+      return theme
+    }
+    if (theme && theme.includes('-')) {
+      return theme.startsWith('dark') ? 'dark' : 'light'
+    }
+    if (resolvedTheme === 'dark' || resolvedTheme === 'light') {
+      return resolvedTheme
+    }
+    return 'light' // fallback
+  }
+
   // Function to set theme that preserves light/dark preference
   const setColorTheme = (colorTheme: string) => {
     // If custom theme is selected, open the dialog
@@ -81,31 +97,14 @@ export function ThemeSelector() {
       existingStyle.remove()
     }
 
-    // Get the current mode (dark or light) from various possible sources
-    let baseTheme: string
-
-    // First priority: If theme is explicitly dark or light
-    if (theme === 'dark' || theme === 'light') {
-      baseTheme = theme
-    }
-    // Second priority: If theme is a compound theme (like 'dark-blue')
-    else if (theme && theme.includes('-')) {
-      baseTheme = theme.startsWith('dark') ? 'dark' : 'light'
-    }
-    // Third priority: Use resolvedTheme (this accounts for 'system' preference)
-    else if (resolvedTheme === 'dark' || resolvedTheme === 'light') {
-      baseTheme = resolvedTheme
-    }
-    // Fallback if nothing else works
-    else {
-      baseTheme = 'light' // Safe default
-    }
+    // Get the current mode
+    const currentMode = getCurrentMode()
 
     // Set the theme - either plain (dark/light) or with color theme
     if (colorTheme === 'default') {
-      setTheme(baseTheme)
+      setTheme(currentMode)
     } else {
-      setTheme(`${baseTheme}-${colorTheme}`)
+      setTheme(`${currentMode}-${colorTheme}`)
     }
   }
 
@@ -148,12 +147,9 @@ export function ThemeSelector() {
       // Save to localStorage
       localStorage.setItem('customThemeCSS', customThemeCSS)
 
-      // Set theme to custom
-      const baseTheme =
-        resolvedTheme === 'dark' || (theme && theme.startsWith('dark'))
-          ? 'dark'
-          : 'light'
-      setTheme(`${baseTheme}-custom`)
+      // Set theme to custom, preserving current mode
+      const currentMode = getCurrentMode()
+      setTheme(`${currentMode}-custom`)
 
       setCustomThemeDialogOpen(false)
     } catch (error) {
@@ -219,7 +215,8 @@ export function ThemeSelector() {
                 tweakcn.com/editor/theme
                 <ExternalLinkIcon className="ml-1 h-3 w-3" />
               </Button>
-              choose the code option after selecting the theme and paste the code here.
+              choose the code option after selecting the theme and paste the
+              code here.
             </DialogDescription>
           </DialogHeader>
 

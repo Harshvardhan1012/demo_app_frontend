@@ -23,24 +23,10 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
     if (type === 'destructive') {
       toast.error(title, {
         description,
-        style: {
-          '--normal-bg': 'var(--background)',
-          '--normal-text':
-            'light-dark(var(--color-red-600), var(--color-red-400))',
-          '--normal-border':
-            'light-dark(var(--color-red-600), var(--color-red-400))',
-        } as React.CSSProperties,
       })
     } else {
       toast.success(title, {
         description,
-        style: {
-          '--normal-bg': 'var(--background)',
-          '--normal-text':
-            'light-dark(var(--color-green-600), var(--color-green-400))',
-          '--normal-border':
-            'light-dark(var(--color-green-600), var(--color-green-400))',
-        } as React.CSSProperties,
       })
     }
   }
@@ -48,26 +34,12 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
   const showSuccess = (title: string, description?: string) => {
     toast.success(title, {
       description,
-      style: {
-        '--normal-bg': 'var(--background)',
-        '--normal-text':
-          'light-dark(var(--color-green-600), var(--color-green-400))',
-        '--normal-border':
-          'light-dark(var(--color-green-600), var(--color-green-400))',
-      } as React.CSSProperties,
     })
   }
 
   const showError = (title: string, description?: string) => {
     toast.error(title, {
       description,
-      style: {
-        '--normal-bg': 'var(--background)',
-        '--normal-text':
-          'light-dark(var(--color-red-600), var(--color-red-400))',
-        '--normal-border':
-          'light-dark(var(--color-red-600), var(--color-red-400))',
-      } as React.CSSProperties,
     })
   }
 
