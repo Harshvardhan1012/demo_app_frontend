@@ -1,19 +1,19 @@
 export const apiPaths = {
   users: {
-    me: "/users/me",
+    me: "/v1/users/me",
   },
   expenses: {
-    list: "/expenses",
-    create: "/expenses",
-    detail: (id: number) => `/expenses/${id}`,
-    update: (id: number) => `/expenses/${id}`,
-    delete: (id: number) => `/expenses/${id}`,
+    list: "/v1/expenses",
+    create: "/v1/expenses",
+    detail: (id: number) => `/v1/expenses/${id}`,
+    update: (id: number) => `/v1/expenses/${id}`,
+    delete: (id: number) => `/v1/expenses/${id}`,
   },
   categories: {
-    list: "/categories",
+    list: "/v1/categories",
   },
   currencies: {
-    list: "/currencies",
+    list: "/v1/currencies",
   },
 } as const
 
