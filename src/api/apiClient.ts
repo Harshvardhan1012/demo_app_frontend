@@ -30,7 +30,7 @@ interface ApiCallOptions {
 }
 
 
-const baseUrl = import.meta.env.VITE_API_BASE_URL ?? "https://demoappbackend-production.up.railway.app/v1"
+const baseUrl = import.meta.env.VITE_API_BASE_URL ?? "https://demoappbackend-production.up.railway.app"
 
 const apiClient: AxiosInstance = axios.create({
   timeout: 10000, // 10 seconds timeout
