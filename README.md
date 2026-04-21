@@ -1036,4 +1036,4 @@ import type { ChartDataPoint, ChartType, ChartConfig } from '@/components/chart'
 - Check that data is in correct format
 - Ensure chart type supports your data structure
 
----
+---"# demo_app_frontend" 
